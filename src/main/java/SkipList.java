@@ -1,9 +1,7 @@
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
-/**
- * Created by loxtank on 2017-03-02.
- */
 public class SkipList<E extends Comparable<E>> {
     private Node<E> head;
 
@@ -18,38 +16,55 @@ public class SkipList<E extends Comparable<E>> {
 
     private void add(E element, Node<E> currentNode) {
         Node<E> newNode = new Node<>(element);
+
         if (head.getConnections().size() == 0) {
             head.getConnections().add(newNode);
+            return;
         }
 
         Node<E> closestNode = findClosestElement(element, currentNode);
 
-        int numberOfLevels = 0;
-                /*while (new Random().nextBoolean()) {
-                    numberOfLevels++;
-                }*/
+        int closestNodeConnections = closestNode.getConnections().size();
+        int numberOfLevels = 1;
 
-        if (closestNode.getConnections().size() <= numberOfLevels) {
-            newNode.setConnections(closestNode.getConnections().subList(0, closestNode.getConnections().size()));
+        while (new Random().nextBoolean()) {
+            numberOfLevels++;
+        }
 
-            if (closestNode.getConnections().size() == 0) {
-                closestNode.getConnections().add(newNode);
-            } else {
-                for (int i = 0; i < closestNode.getConnections().size(); i++) {
+        // Här ska "&& numberOfNodes == 1" in i if satsen
+        if (closestNodeConnections == 0 ) {
+            closestNode.getConnections().add(newNode);
+            return;
+            
+        } else {
 
-                    closestNode.getConnections().set(i, newNode);
-                }
+        setNewNodeConnections(closestNode, newNode, closestNodeConnections, numberOfLevels);
+
+        } if (closestNodeConnections <= numberOfLevels) {
+            for (int i = 0; i < closestNodeConnections; i++) {
+                closestNode.getConnections().set(i, newNode);
             }
+        } else if (closestNodeConnections > numberOfLevels) {
 
-            if (closestNode.getConnections().size() > numberOfLevels) {
-                newNode.setConnections(closestNode.getConnections().subList(0, numberOfLevels));
-
-                for (int i = 0; i < numberOfLevels; i++) {
-                    closestNode.getConnections().set(i, newNode);
-                }
+            for (int i = 0; i < numberOfLevels - 1; i++) {
+                closestNode.getConnections().set(i, newNode);
             }
         }
     }
+
+
+    private void setNewNodeConnections(Node<E> closestNode, Node<E> newNode, int closestNodeConnections, int numberOfLevels) {
+        if (closestNodeConnections <= numberOfLevels) {
+            newNode.setConnections(closestNode.getConnections().subList(0, closestNodeConnections));
+
+            // Här behöver man kalla en motod för att sätta de övre levelserna i den nya noden
+
+        } else if (closestNodeConnections > numberOfLevels) {
+            newNode.setConnections(closestNode.getConnections().subList(0, numberOfLevels - 1));
+        }
+    }
+
+
 
 
 
@@ -59,15 +74,21 @@ public class SkipList<E extends Comparable<E>> {
         }
 
         for (Node<E> node : currentNode.getReversedConnections()) {
-                if (node.data.compareTo(element) < 0) {
-                    return findClosestElement(element, node);
+            if (node.data.compareTo(element) < 0) {
+                currentNode =  findClosestElement(element, node);
             }
         }
         return currentNode;
     }
 
     public E getElement(E element) {
-        return getElement(element, head);
+        E target = getElement(element, head);
+        if (target == null) {
+            throw new NoSuchElementException("Could not find " +element);
+        } else {
+            return target;
+        }
+
     }
 
     private E getElement(E element, Node<E> currentNode) {
@@ -84,7 +105,6 @@ public class SkipList<E extends Comparable<E>> {
                 }
             }
         }
-        System.out.println("Could not find element");
         return null;
     }
 

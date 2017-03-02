@@ -34,6 +34,8 @@ public class Node<E extends Comparable<E>> {
     }
 
     public void setConnections(List<Node<E>> connections) {
-        this.connections = connections;
+        //OBS! riktigt kinkigt. Eftersom en array är pass by reference så går det inte att sätta den till inkommande
+        //variabel. Måste göra en kopia med new!!!
+        this.connections = new ArrayList<>(connections);
     }
 }
