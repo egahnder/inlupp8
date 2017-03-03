@@ -1,112 +1,151 @@
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Random;
+import java.util.*;
 
 public class SkipList<E extends Comparable<E>> {
+    private final int LEVELCAP;
     private Node<E> head;
+    private Node<E> tail;
+    private Random rand = new Random();
 
     public SkipList() {
-        head = new Node<>(null);
+        this(31);
+    }
+
+    public SkipList(int levelCap){
+        this.LEVELCAP = levelCap;
+        tail = new Node<E>(null, 0);
+        head = initNode(null, tail, levelCap);
     }
 
     public void add(E element) {
-        add(element, head);
+        Node<E> newNode = initNode(element, tail, decideLevel());
+        int currentLevel = this.LEVELCAP;
+        Node<E> currentNode = head;
+        while(currentLevel >= 0 ){
+            if (currentNode.hasNext(currentLevel)){
+                boolean elementIsBigger = currentNode.next(currentLevel).getData().compareTo(element) < 0;
+                if (!elementIsBigger){
+                    if (newNode.height() >= currentLevel){
+                        newNode.setNext(currentNode.next(currentLevel), currentLevel);
+                        currentNode.setNext(newNode, currentLevel);
+                    }
+                    currentLevel--;
+                }
+                else if(elementIsBigger){
+                    currentNode = currentNode.next(currentLevel);
+                }
 
-    }
-
-    private void add(E element, Node<E> currentNode) {
-        Node<E> newNode = new Node<>(element);
-
-        if (head.getConnections().size() == 0) {
-            head.getConnections().add(newNode);
-            return;
-        }
-
-        Node<E> closestNode = findClosestElement(element, currentNode);
-
-        int closestNodeConnections = closestNode.getConnections().size();
-        int numberOfLevels = 1;
-
-        while (new Random().nextBoolean()) {
-            numberOfLevels++;
-        }
-
-        // Här ska "&& numberOfNodes == 1" in i if satsen
-        if (closestNodeConnections == 0 ) {
-            closestNode.getConnections().add(newNode);
-            return;
-            
-        } else {
-
-        setNewNodeConnections(closestNode, newNode, closestNodeConnections, numberOfLevels);
-
-        } if (closestNodeConnections <= numberOfLevels) {
-            for (int i = 0; i < closestNodeConnections; i++) {
-                closestNode.getConnections().set(i, newNode);
             }
-        } else if (closestNodeConnections > numberOfLevels) {
-
-            for (int i = 0; i < numberOfLevels - 1; i++) {
-                closestNode.getConnections().set(i, newNode);
+            else{
+                if (newNode.height() >= currentLevel){
+                    newNode.setNext(currentNode.next(currentLevel), currentLevel);
+                    currentNode.setNext(newNode, currentLevel);
+                }
+                currentLevel--;
             }
         }
     }
 
 
-    private void setNewNodeConnections(Node<E> closestNode, Node<E> newNode, int closestNodeConnections, int numberOfLevels) {
-        if (closestNodeConnections <= numberOfLevels) {
-            newNode.setConnections(closestNode.getConnections().subList(0, closestNodeConnections));
-
-            // Här behöver man kalla en motod för att sätta de övre levelserna i den nya noden
-
-        } else if (closestNodeConnections > numberOfLevels) {
-            newNode.setConnections(closestNode.getConnections().subList(0, numberOfLevels - 1));
+    private int decideLevel(){
+        int level = 0;
+        while(rand.nextBoolean() && level < this.LEVELCAP){
+            level++;
         }
-    }
-
-
-
-
-
-    private Node<E> findClosestElement(E element, Node<E> currentNode) {
-        if(currentNode.getConnections().size() == 0) {
-            return currentNode;
-        }
-
-        for (Node<E> node : currentNode.getReversedConnections()) {
-            if (node.data.compareTo(element) < 0) {
-                currentNode =  findClosestElement(element, node);
-            }
-        }
-        return currentNode;
+        return level;
     }
 
     public E getElement(E element) {
-        E target = getElement(element, head);
-        if (target == null) {
-            throw new NoSuchElementException("Could not find " +element);
-        } else {
-            return target;
-        }
-
-    }
-
-    private E getElement(E element, Node<E> currentNode) {
-        List<Node<E>> connections = currentNode.getReversedConnections();
-        for (Node<E> node : connections) {
-            if (node != null) {
-                if (node.data.compareTo(element) < 0) {
-                    return getElement(element, node);
+        int currentLevel = this.LEVELCAP;
+        Node<E> currentNode = head;
+        while (currentLevel >= 0) {
+            if (currentNode.hasNext(currentLevel)) {
+                int elementDifference = currentNode.next(currentLevel).getData().compareTo(element);
+                if (elementDifference > 0) {
+                    currentLevel--;
+                } else if (elementDifference < 0) {
+                    currentNode = currentNode.next(currentLevel);
+                }
+                else{
+                    return currentNode.next(currentLevel).getData();
                 }
 
-                if (node.data.compareTo(element) == 0) {
-                    return node.data;
-
-                }
+            } else {
+                currentLevel--;
             }
         }
         return null;
     }
 
 
+    public E remove(E element){
+        int currentLevel = this.LEVELCAP;
+        Node<E> currentNode = head;
+        while (currentLevel >= 0) {
+            if (currentNode.hasNext(currentLevel)) {
+                int elementDifference = currentNode.next(currentLevel).getData().compareTo(element);
+                if (elementDifference > 0) {
+                    currentLevel--;
+                } else if (elementDifference < 0) {
+                    currentNode = currentNode.next(currentLevel);
+                }
+                else{
+                    if (currentLevel == 0){
+                        E data = currentNode.next(currentLevel).getData();
+                        currentNode.setNext(currentNode.next(currentLevel).next(currentLevel), currentLevel);
+                        return data;
+                    }
+                    else{
+                        currentNode.setNext(currentNode.next(currentLevel).next(currentLevel), currentLevel);
+                    }
+                    currentLevel--;
+                }
+            } else {
+                currentLevel--;
+            }
+        }
+        return null;
+    }
+
+    private Node<E> initNode(E data, Node<E> node, int level){
+        Node<E> newNode = new Node<>(data, level);
+        for(int i = 0; i <= level; i++){
+            newNode.connections.add(node);
+        }
+        return newNode;
+    }
+
+    private class Node<E extends Comparable<E>> {
+        private E data;
+        private final int numOfLevels;
+        private ArrayList<Node<E>> connections;
+
+        private Node(E data, int numOfLevels) {
+            this.data = data;
+            this.numOfLevels = numOfLevels;
+            this.connections = new ArrayList<>();
+        }
+
+        public E getData() {
+            return data;
+        }
+
+        public void setNext(Node<E> newNext, int level) {
+            connections.set(level, newNext);
+        }
+
+
+        private int height(){
+            return numOfLevels;
+        }
+
+        private Node<E> next(int level){
+            return connections.get(level);
+        }
+
+        private boolean hasNext(int level){
+            return connections.get(level) != tail;
+        }
+
+    }
 }
+
