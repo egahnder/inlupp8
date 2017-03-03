@@ -1,6 +1,3 @@
-/**
- * Created by loxtank on 2017-03-02.
- */
 import org.junit.Before;
 import org.junit.Test;
 
@@ -136,4 +133,81 @@ public class SkipListTest {
             assertEquals(null, classUnderTest.getElement(s));
         }
     }
+
+    @Test
+    public void addDuplicates() {
+
+        classUnderTest.add("Tobias");
+        classUnderTest.add("Daniel");
+        classUnderTest.add("Daniel");
+        classUnderTest.add("Eric");
+
+        assertEquals("Daniel", classUnderTest.getElement("Daniel"));
+    }
+
+    @Test
+    public void removeOneDuplicate() {
+
+        classUnderTest.add("Tobias");
+        classUnderTest.add("Daniel");
+        classUnderTest.add("Daniel");
+        classUnderTest.add("Eric");
+
+        classUnderTest.remove("Daniel");
+        assertEquals("Daniel", classUnderTest.getElement("Daniel"));
+    }
+
+    @Test
+    public void removeTwoDuplicate() {
+
+        classUnderTest.add("Tobias");
+        classUnderTest.add("Daniel");
+        classUnderTest.add("Daniel");
+        classUnderTest.add("Eric");
+
+        classUnderTest.remove("Daniel");
+        classUnderTest.remove("Daniel");
+        assertEquals(null, classUnderTest.getElement("Daniel"));
+    }
+
+    @Test
+    public void removeLastElement() {
+
+        classUnderTest.add("Tobias");
+        classUnderTest.add("Daniel");
+
+        classUnderTest.remove("Daniel");
+        classUnderTest.remove("Tobias");
+        assertEquals(null, classUnderTest.getElement("Daniel"));
+        assertEquals(null, classUnderTest.getElement("Tobias"));
+        assertEquals(null, classUnderTest.getElement("Something"));
+    }
+
+    @Test
+    public void removeNonExistentElement() {
+
+        classUnderTest.add("Tobias");
+        classUnderTest.add("Daniel");
+
+        assertEquals(null, classUnderTest.remove("Danne"));
+    }
+
+    @Test
+    public void removeAllAndAddNew() {
+
+        classUnderTest.add("Tobias");
+        classUnderTest.add("Daniel");
+
+        classUnderTest.remove("Tobias");
+        classUnderTest.remove("Daniel");
+
+        classUnderTest.add("Eric");
+        classUnderTest.add("Tobias");
+
+        assertEquals("Eric", classUnderTest.getElement("Eric"));
+        assertEquals("Tobias", classUnderTest.getElement("Tobias"));
+
+    }
+
+
 }
