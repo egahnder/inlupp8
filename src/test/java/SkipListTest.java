@@ -209,5 +209,22 @@ public class SkipListTest {
 
     }
 
-
+//    @Test
+//    public void speedTest(){
+//        int n = 1000000;
+//        Random rand = new Random();
+//        for (int i = 0; i < n; i++){
+//            int j = rand.nextInt(n);
+//            classUnderTest.add(Integer.toString(j));
+//        }
+//
+//        for (int i = 0; i < n; i++){
+//            int j = rand.nextInt(n);
+//            classUnderTest.getElement(Integer.toString(n));
+//        }
+//        for (int i = 0; i < n; i++){
+//            int j = rand.nextInt(n);
+//            classUnderTest.remove(Integer.toString(n));
+//        }
+//    }
 }
