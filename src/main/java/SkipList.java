@@ -18,33 +18,33 @@ public class SkipList<E extends Comparable<E>> {
 
     public void add(E element) {
         Node<E> newNode = initNode(element, tail, decideLevel());
-        int currentLevel = this.LEVELCAP;
         Node<E> currentNode = head;
-        while(currentLevel >= 0 ){
-            if (currentNode.hasNext(currentLevel)){
-                boolean elementIsBigger = currentNode.next(currentLevel).getData().compareTo(element) < 0;
-                if (!elementIsBigger){
-                    if (newNode.height() >= currentLevel){
-                        newNode.setNext(currentNode.next(currentLevel), currentLevel);
-                        currentNode.setNext(newNode, currentLevel);
-                    }
-                    currentLevel--;
-                }
-                else if(elementIsBigger){
-                    currentNode = currentNode.next(currentLevel);
-                }
-
-            }
-            else{
-                if (newNode.height() >= currentLevel){
-                    newNode.setNext(currentNode.next(currentLevel), currentLevel);
-                    currentNode.setNext(newNode, currentLevel);
-                }
-                currentLevel--;
+        for (int currentLevel = LEVELCAP; currentLevel >= 0; currentLevel--){
+            currentNode = getClosest(currentNode, currentLevel, element);
+            if (newNode.height >= currentLevel){
+                addAfter(newNode, currentNode, currentLevel);
             }
         }
     }
 
+    private void addAfter(Node<E> first, Node<E> second, int level){
+        first.setNext(second.next(level), level);
+        second.setNext(first, level);
+    }
+
+    private Node<E> getClosest(Node<E> startNode, int level, E element) {
+        Node<E> currentNode = startNode;
+        while (currentNode.hasNext(level)) {
+            boolean elementIsBigger = currentNode.next(level).data.compareTo(element) <= 0;
+            if (!elementIsBigger) {
+                currentNode = currentNode.next(level);
+            }
+            else{
+                break;
+            }
+        }
+        return currentNode;
+    }
 
     private int decideLevel(){
         int level = 0;
@@ -55,52 +55,32 @@ public class SkipList<E extends Comparable<E>> {
     }
 
     public E getElement(E element) {
-        int currentLevel = this.LEVELCAP;
         Node<E> currentNode = head;
-        while (currentLevel >= 0) {
-            if (currentNode.hasNext(currentLevel)) {
-                int elementDifference = currentNode.next(currentLevel).getData().compareTo(element);
-                if (elementDifference > 0) {
-                    currentLevel--;
-                } else if (elementDifference < 0) {
-                    currentNode = currentNode.next(currentLevel);
+        for (int currentLevel = LEVELCAP; currentLevel >= 0; currentLevel--){
+            currentNode = getClosest(currentNode, currentLevel, element);
+            if (currentNode.hasNext(currentLevel)){
+                if (currentNode.next(currentLevel).data.compareTo(element) == 0){
+                    return currentNode.next(currentLevel).data;
                 }
-                else{
-                    return currentNode.next(currentLevel).getData();
-                }
-
-            } else {
-                currentLevel--;
             }
         }
         return null;
     }
 
-
     public E remove(E element){
-        int currentLevel = this.LEVELCAP;
         Node<E> currentNode = head;
-        while (currentLevel >= 0) {
-            if (currentNode.hasNext(currentLevel)) {
-                int elementDifference = currentNode.next(currentLevel).getData().compareTo(element);
-                if (elementDifference > 0) {
-                    currentLevel--;
-                } else if (elementDifference < 0) {
-                    currentNode = currentNode.next(currentLevel);
-                }
-                else{
-                    if (currentLevel == 0){
-                        E data = currentNode.next(currentLevel).getData();
+        for (int currentLevel = LEVELCAP; currentLevel >= 0; currentLevel--) {
+            currentNode = getClosest(currentNode, currentLevel, element);
+            if (currentNode.hasNext(currentLevel)){
+                if (currentNode.next(currentLevel).data.compareTo(element) == 0){
+                    if (currentLevel == 0) {
+                        E data = currentNode.next(currentLevel).data;
                         currentNode.setNext(currentNode.next(currentLevel).next(currentLevel), currentLevel);
                         return data;
-                    }
-                    else{
+                    } else {
                         currentNode.setNext(currentNode.next(currentLevel).next(currentLevel), currentLevel);
                     }
-                    currentLevel--;
                 }
-            } else {
-                currentLevel--;
             }
         }
         return null;
@@ -114,38 +94,28 @@ public class SkipList<E extends Comparable<E>> {
         return newNode;
     }
 
-    private class Node<E extends Comparable<E>> {
-        private E data;
-        private final int numOfLevels;
-        private ArrayList<Node<E>> connections;
+    private class Node<N extends Comparable<N>> {
+        private N data;
+        private final int height;
+        private ArrayList<Node<N>> connections;
 
-        private Node(E data, int numOfLevels) {
+        private Node(N data, int height) {
             this.data = data;
-            this.numOfLevels = numOfLevels;
+            this.height = height;
             this.connections = new ArrayList<>();
         }
 
-        public E getData() {
-            return data;
-        }
-
-        public void setNext(Node<E> newNext, int level) {
+        public void setNext(Node<N> newNext, int level) {
             connections.set(level, newNext);
         }
 
-
-        private int height(){
-            return numOfLevels;
-        }
-
-        private Node<E> next(int level){
+        private Node<N> next(int level){
             return connections.get(level);
         }
 
         private boolean hasNext(int level){
             return connections.get(level) != tail;
         }
-
     }
 }
 
